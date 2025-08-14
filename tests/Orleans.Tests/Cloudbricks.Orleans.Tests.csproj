@@ -1,0 +1,39 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="coverlet.collector" Version="6.0.2">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+		<PackageReference Include="xunit" Version="2.9.2" />
+		<PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="FluentAssertions" Version="8.5.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.8" />
+		<PackageReference Include="Xunit.SkippableFact" Version="1.5.23" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\..\src\DataExplorer.Storage.Abstractions\Cloudbrick.DataExplorer.Storage.Abstractions.csproj" />
+	  <ProjectReference Include="..\..\src\DataExplorer.Storage.Configuration\Cloudbrick.DataExplorer.Storage.Configuration.csproj" />
+	  <ProjectReference Include="..\..\src\DataExplorer.Storage.Provider.FileSystem\Cloudbrick.DataExplorer.Storage.Provider.FileSystem.csproj" />
+	  <ProjectReference Include="..\..\src\Orleans.Persistance.DataExplorer\Cloudbrick.Orleans.Persistance.DataExplorer.csproj" />
+	  <ProjectReference Include="..\..\src\Orleans.Reminders.DataExplorer\Cloudbrick.Orleans.Reminders.DataExplorer.csproj" />
+	</ItemGroup>
+
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>

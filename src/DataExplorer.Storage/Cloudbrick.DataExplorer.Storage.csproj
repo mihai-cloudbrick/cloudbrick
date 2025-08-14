@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\DataExplorer.Storage.Provider.AzureBlob\Cloudbrick.DataExplorer.Storage.Provider.AzureBlob.csproj" />
+		<ProjectReference Include="..\DataExplorer.Storage.Provider.AzureTable\Cloudbrick.DataExplorer.Storage.Provider.AzureTable.csproj" />
+		<ProjectReference Include="..\DataExplorer.Storage.Provider.Cosmos\Cloudbrick.DataExplorer.Storage.Provider.Cosmos.csproj" />
+		<ProjectReference Include="..\DataExplorer.Storage.Provider.FileSystem\Cloudbrick.DataExplorer.Storage.Provider.FileSystem.csproj" />
+		<ProjectReference Include="..\DataExplorer.Storage.Provider.Sql\Cloudbrick.DataExplorer.Storage.Provider.Sql.csproj" />
+	</ItemGroup>
+
+</Project>
