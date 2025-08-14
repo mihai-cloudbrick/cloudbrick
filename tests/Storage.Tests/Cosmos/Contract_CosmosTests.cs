@@ -23,7 +23,7 @@ public class Contract_CosmosTests
 
         var sp = TestHost.BuildBaseServices(services =>
         {
-            services.AddCosmosDatabase(dbId, opt =>
+            services.AddAzureCosmosDatabase(dbId, opt =>
             {
                 opt.Endpoint = endpoint!;
                 opt.Key = key!;

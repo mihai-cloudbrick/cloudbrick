@@ -28,7 +28,7 @@ public sealed class CosmosProviderBuilder : IStorageProviderBuilder
         _scopes = scopes;
     }
 
-    public StorageProviderKind Kind => StorageProviderKind.CosmosDb;
+    public StorageProviderKind Kind => StorageProviderKind.AzureCosmosDb;
 
     public IStorageProvider Build(string databaseId, IProviderOptions options)
     {

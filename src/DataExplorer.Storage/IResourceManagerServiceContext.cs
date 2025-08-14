@@ -9,10 +9,10 @@ namespace Cloudbrick.DataExplorer.Storage
 {
     public interface IResourceManagerServiceContext
     {
-        void AddAzureBlobDatabase(string databaseId, Action<BlobOptions> fileSystemOptions);
-        void AddCosmosDatabase(string databaseId, Action<CosmosOptions> fileSystemOptions);
-        void AddLocalFileSystemDatabase(string databaseId, Action<FileSystemOptions> fileSystemOptions);
-        void AddLocalFileSystemDatabase(string databaseId, Action<TableOptions> fileSystemOptions);
+        void AddAzureBlobsDatabase(string databaseId, Action<BlobOptions> options);
+        void AddAzureCosmosDatabase(string databaseId, Action<CosmosOptions> options);
+        void AddLocalFileSystemDatabase(string databaseId, Action<FileSystemOptions> options);
+        void AddAzureTablesDatabase(string databaseId, Action<TableOptions> options);
         void AddSqlDatabase(string databaseId, Action<SqlOptions> fileSystemOptions);
     }
 }

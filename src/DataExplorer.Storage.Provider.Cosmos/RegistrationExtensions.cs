@@ -6,7 +6,7 @@ namespace Cloudbrick.DataExplorer.Storage.Provider.Cosmos;
 
 public static class RegistrationExtensions
 {
-    public static IServiceCollection AddCosmosDatabase(
+    public static IServiceCollection AddAzureCosmosDatabase(
         this IServiceCollection services,
         string databaseId,
         Action<CosmosOptions> configure)
