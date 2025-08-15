@@ -1,4 +1,4 @@
-﻿using Cloudbrick.Orleans.Jobs.Abstractions;
+using Cloudbrick.Orleans.Jobs.Abstractions;
 using Cloudbrick.Orleans.Jobs.Abstractions.Interfaces;
 using Cloudbrick.Orleans.Jobs.Abstractions.Managers;
 using Cloudbrick.Orleans.Jobs.Executors;

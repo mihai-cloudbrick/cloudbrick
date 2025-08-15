@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using Cloudbrick.DataExplorer.Storage.Provider.Sql;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;

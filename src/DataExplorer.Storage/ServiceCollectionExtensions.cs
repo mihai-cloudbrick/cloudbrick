@@ -1,4 +1,4 @@
-﻿using Cloudbrick.DataExplorer.Storage.Configuration;
+using Cloudbrick.DataExplorer.Storage.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
