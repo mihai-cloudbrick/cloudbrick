@@ -36,24 +36,27 @@ public class PauseResumeTests : IClassFixture<ClusterFixture>
         await job.PauseAsync();
 
         var before = await job.GetStateAsync();
+        before.Should().NotBeNull();
         await Task.Delay(300);
         var after = await job.GetStateAsync();
+        after.Should().NotBeNull();
         // Progress should not decrease; may remain same due to pause
-        after.Tasks["t1"].Progress.Should().BeGreaterThanOrEqualTo(before.Tasks["t1"].Progress);
+        after!.Tasks["t1"].Progress.Should().BeGreaterThanOrEqualTo(before!.Tasks["t1"].Progress);
 
         await job.ResumeAsync();
 
         // wait for completion
-        JobState state;
+        JobState? state;
         int guard = 0;
         do
         {
             await Task.Delay(100);
             state = await job.GetStateAsync();
+            state.Should().NotBeNull();
             guard++;
             if (guard > 200) break;
-        } while (state.Status != JobStatus.Succeeded);
+        } while (state!.Status != JobStatus.Succeeded);
 
-        state.Status.Should().Be(JobStatus.Succeeded);
+        state!.Status.Should().Be(JobStatus.Succeeded);
     }
 }

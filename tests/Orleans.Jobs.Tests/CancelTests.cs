@@ -30,6 +30,7 @@ public class CancelTests : IClassFixture<ClusterFixture>
         await mgr.CancelJobAsync(jobId);
 
         var state = await mgr.GetJobStateAsync(jobId);
-        state.Status.Should().BeOneOf(Cloudbrick.Orleans.Jobs.Abstractions.Enums.JobStatus.Cancelling, Cloudbrick.Orleans.Jobs.Abstractions.Enums.JobStatus.Cancelled);
+        state.Should().NotBeNull();
+        state!.Status.Should().BeOneOf(Cloudbrick.Orleans.Jobs.Abstractions.Enums.JobStatus.Cancelling, Cloudbrick.Orleans.Jobs.Abstractions.Enums.JobStatus.Cancelled);
     }
 }
