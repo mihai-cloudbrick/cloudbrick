@@ -12,6 +12,7 @@ public interface IJobGrain : IGrainWithGuidKey
     Task PauseAsync();
     Task ResumeAsync();
     Task CancelAsync();
+    Task DeleteAsync();
     Task<JobState> GetStateAsync();
     Task FlushAsync();
     Task EmitTelemetryAsync(ExecutionEvent evt);

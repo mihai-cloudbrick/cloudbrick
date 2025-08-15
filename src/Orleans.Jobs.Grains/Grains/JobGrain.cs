@@ -443,6 +443,17 @@ internal class JobGrain : Grain, IJobGrain
         await TryFinalizeIfTerminalAsync();
     }
 
+    public async Task DeleteAsync()
+    {
+        _schedulerCts?.Cancel();
+        _schedulerCts?.Dispose();
+        _schedulerCts = null;
+        _schedulerTimer?.Dispose();
+        _schedulerTimer = null;
+        await _state.ClearStateAsync();
+        DeactivateOnIdle();
+    }
+
     public Task<JobState> GetStateAsync() => Task.FromResult(_state.State);
 
     public Task FlushAsync() => _state.WriteWithRetry(_state.State.Clone());

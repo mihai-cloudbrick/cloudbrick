@@ -35,6 +35,12 @@ internal class JobsManagerGrain : Grain, IJobsManagerGrain
     public Task PauseJobAsync(Guid jobId) => GrainFactory.GetGrain<IJobGrain>(jobId).PauseAsync();
     public Task ResumeJobAsync(Guid jobId) => GrainFactory.GetGrain<IJobGrain>(jobId).ResumeAsync();
     public Task CancelJobAsync(Guid jobId) => GrainFactory.GetGrain<IJobGrain>(jobId).CancelAsync();
+    public async Task DeleteJobAsync(Guid jobId)
+    {
+        await GrainFactory.GetGrain<IJobGrain>(jobId).DeleteAsync();
+        if (_jobs.State != null && _jobs.State.Remove(jobId))
+            await _jobs.WriteStateAsync();
+    }
     public Task<JobState> GetJobStateAsync(Guid jobId) => GrainFactory.GetGrain<IJobGrain>(jobId).GetStateAsync();
     public Task<List<Guid>> ListJobsAsync() => Task.FromResult(_jobs.State ?? new List<Guid>());
 }
