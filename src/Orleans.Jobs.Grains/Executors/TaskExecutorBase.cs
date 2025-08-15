@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Cloudbrick.Orleans.Jobs.Abstractions.Interfaces;
 using Cloudbrick.Orleans.Jobs.Abstractions.Models;
+using Microsoft.Extensions.Logging;
 
 namespace Cloudbrick.Orleans.Jobs.Executors;
 
@@ -68,7 +69,7 @@ internal sealed class TaskExecutionContext : ITaskExecutionContext
     public string TaskId { get; }
     public string CorrelationId { get; }
     public string CommandJson { get; }
-    public Microsoft.Extensions.Logging.ILogger Logger { get; }
+    public ILogger Logger { get; }
 
     private readonly Func<int, string?, Task> _progress;
     private readonly Func<ExecutionEvent, Task> _emit;

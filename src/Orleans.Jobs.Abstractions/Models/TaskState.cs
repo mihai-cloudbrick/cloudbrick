@@ -21,7 +21,7 @@ public class TaskState
     public List<TaskHistoryEntry> History { get; set; } = new();
     public string JobId { get; set; } = string.Empty;
     public string CorrelationId { get; set; } = string.Empty;
-    // NEW — CRON runtime state
+    // NEW â€” CRON runtime state
     public bool IsRecurring { get; set; }
     public string? Cron { get; set; }
     public string? CronTimeZone { get; set; }
@@ -33,4 +33,36 @@ public class TaskState
     public DateTimeOffset? LastRunAt { get; set; }
     public DateTimeOffset? NextRunAt { get; set; }
     public JobTaskStatus? PausedFrom { get; set; }
+    public TaskState Clone()
+    {
+        return new TaskState
+        {
+            StartedAt = StartedAt,
+            CompletedAt = CompletedAt,
+            Status = Status,
+            AllowConcurrentRuns = AllowConcurrentRuns,
+            Attempts = Attempts,
+            CommandJson = CommandJson,
+            CorrelationId = CorrelationId,
+            CreatedAt = CreatedAt,
+            Cron = Cron,
+            CronTimeZone = CronTimeZone,
+            Dependencies = Dependencies,
+            ExecutorType = ExecutorType,
+            History = [.. History.Select(c => new TaskHistoryEntry { Message = c.Message, Timestamp = c.Timestamp })],
+            IsRecurring = IsRecurring,
+            JobId = JobId,
+            LastError = LastError,
+            LastRunAt = LastRunAt,
+            MaxRuns = MaxRuns,
+            NextRunAt = NextRunAt,
+            NotAfter = NotAfter,
+            NotBefore = NotBefore,
+            OutputJson = OutputJson,
+            PausedFrom = PausedFrom,
+            Progress = Progress,
+            RunCount = RunCount,
+            TaskId = TaskId,
+        };
+    }
 }

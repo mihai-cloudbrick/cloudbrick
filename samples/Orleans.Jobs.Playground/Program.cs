@@ -23,6 +23,11 @@ class Program
         //    .Build()
         //    .Connect();
 
+        await TestTwo(host);
+    }
+
+    private static async Task TestOne(IHost host)
+    {
         try
         {
             var client = host.Services.GetRequiredService<IClusterClient>();
@@ -38,7 +43,7 @@ class Program
             };
             spec.Tasks["adder"] = new TaskSpec { ExecutorType = "adder", CommandJson = "{ \"a\": 40, \"b\": 2 }" };
             spec.Tasks["wait"] = new TaskSpec { ExecutorType = "delay", CommandJson = "{ \"milliseconds\": 1000, \"steps\": 10 }", Dependencies = { "adder" } };
-            spec.Tasks["wait2"] = new TaskSpec { ExecutorType = "delay", CommandJson = "{ \"milliseconds\": 1000, \"steps\": 10 }", Dependencies = { "adder" , "wait" } };
+            spec.Tasks["wait2"] = new TaskSpec { ExecutorType = "delay", CommandJson = "{ \"milliseconds\": 1000, \"steps\": 10 }", Dependencies = { "adder", "wait" } };
 
             var jobId = await jobs.CreateJobAsync(spec);
 
@@ -47,7 +52,7 @@ class Program
             var jobStream = provider.GetStream<ExecutionEvent>(StreamId.Create(StreamConstants.JobNamespace, jobId.ToString()));
             await jobStream.SubscribeAsync((evt, ct) =>
             {
-                Console.WriteLine($"[JOB {evt.JobId}][{evt.CorrelationId}] {evt.EventType} {evt.TaskId} {evt.Message} { (evt.Progress.HasValue ? $"{evt.Progress}%" : "") }");
+                Console.WriteLine($"[JOB {evt.JobId}][{evt.CorrelationId}] {evt.EventType} {evt.TaskId} {evt.Message} {(evt.Progress.HasValue ? $"{evt.Progress}%" : "")}");
                 return Task.CompletedTask;
             });
 
@@ -78,6 +83,74 @@ class Program
             await host.StopAsync();
         }
     }
+    private static async Task TestTwo(IHost host)
+    {
+        try
+        {
+            var client = host.Services.GetRequiredService<IClusterClient>();
+            var jobs = client.GetGrain<IJobsManagerGrain>("manager");
+
+            var spec = new JobSpec
+            {
+                Name = "playground-job",
+                MaxDegreeOfParallelism = 2,
+                FailFast = true,
+                CorrelationId = Guid.NewGuid().ToString("N"),
+                TelemetryProviderKey = "nope"
+            };
+            spec.Tasks["adder"] = new TaskSpec { ExecutorType = "adder", CommandJson = "{ \"a\": 40, \"b\": 2 }" };
+            spec.Tasks["wait"] = new TaskSpec { ExecutorType = "delay", CommandJson = "{ \"milliseconds\": 1000, \"steps\": 10 }", Dependencies = { "adder" } };
+            spec.Tasks["wait2"] = new TaskSpec { ExecutorType = "delay", CommandJson = "{ \"milliseconds\": 1000, \"steps\": 10 }", Dependencies = { "adder", "wait" } };
+
+            var jobId = await jobs.CreateJobAsync(spec);
+
+            // Subscribe to job telemetry
+            var provider = client.GetStreamProvider(StreamConstants.ProviderName);
+            var jobStream = provider.GetStream<ExecutionEvent>(StreamId.Create(StreamConstants.JobNamespace, jobId.ToString()));
+            await jobStream.SubscribeAsync((evt, ct) =>
+            {
+                Console.WriteLine($"[JOB {evt.JobId}][{evt.CorrelationId}] {evt.EventType} {evt.TaskId} {evt.Message} {(evt.Progress.HasValue ? $"{evt.Progress}%" : "")}");
+                return Task.CompletedTask;
+            });
+
+            var job = client.GetGrain<IJobGrain>(jobId);
+            await job.EmitTelemetryAsync(new ExecutionEvent { EventType = ExecutionEventType.Custom, Message = "Manual telemetry before start" });
+            await job.FlushAsync();
+
+            Console.WriteLine("Starting job...");
+            await jobs.StartJobAsync(jobId);
+
+            int count = 0;
+
+            // Wait until job completes
+            while (true)
+            {
+                var state = await jobs.GetJobStateAsync(jobId);
+                if (state.Status is JobStatus.Succeeded
+                    or JobStatus.Failed
+                    or JobStatus.Cancelled)
+                {
+                    Console.WriteLine($"Job finished: {state.Status}");
+                    break;
+                }
+                await Task.Delay(200);
+
+                if(count == 50)
+                {
+                    Console.WriteLine($"Cancell Job: {state.Status}");
+                    await jobs.CancelJobAsync(jobId);
+                }
+
+                count++;
+            }
+        }
+        finally
+        {
+            //await client.Close();
+            await host.StopAsync();
+        }
+    }
+
     private static async Task<IHost> StartSiloAsync()
     {
         var host = Host.CreateDefaultBuilder()

@@ -26,4 +26,5 @@ public class DelayExecutor : TaskExecutorBase<DelayExecutor.DelayCommand>
             await ctx.ReportProgressAsync((int)(i * 100.0 / perStep), $"Step {i}/{perStep}");
         }
     }
+
 }

@@ -9,9 +9,9 @@ namespace Cloudbrick.Orleans.Jobs.Abstractions.Interfaces;
 public interface ITaskGrain : IGrainWithStringKey
 {
     Task StartAsync(Guid jobId, TaskSpec spec);
-    [AlwaysInterleave] Task PauseAsync();   // <—
-    [AlwaysInterleave] Task ResumeAsync();  // <—
-    [AlwaysInterleave] Task CancelAsync();  // <—
+    Task PauseAsync();   // <â€”
+    Task ResumeAsync();  // <â€”
+    Task CancelAsync();  // <â€”
     Task<TaskState> GetStateAsync();
     Task FlushAsync();
     Task EmitTelemetryAsync(ExecutionEvent evt);

@@ -34,7 +34,6 @@ namespace Cloudbrick.Orleans.Jobs.Managers
             if (st == null) return null;
             return ApiModelMapper.ToDetail(st);
         }
-
         public virtual async Task<Guid> CreateAsync(JobSpec spec)
         {
             if (spec == null) throw new Exception("Missing job spec");
@@ -42,23 +41,19 @@ namespace Cloudbrick.Orleans.Jobs.Managers
             var id = await mgr.CreateJobAsync(spec);
             return id;
         }
-
         public virtual async Task StartAsync(Guid id)
         {
             var mgr = _orleans.GetGrain<IJobsManagerGrain>("manager");
             await mgr.StartJobAsync(id);
         }
-
         public virtual async Task PauseAsync(Guid id)
         {
             await _orleans.GetGrain<IJobGrain>(id).PauseAsync();
         }
-
         public virtual async Task ResumeAsync(Guid id)
         {
             await _orleans.GetGrain<IJobGrain>(id).ResumeAsync();
         }
-
         public virtual async Task CancelAsync(Guid id)
         {
             await _orleans.GetGrain<IJobGrain>(id).CancelAsync();

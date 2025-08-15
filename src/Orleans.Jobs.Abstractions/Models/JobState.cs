@@ -24,5 +24,31 @@ public class JobState
     public int FailedTasks { get; set; }
     public int CancelledTasks { get; set; }
     public int CompletedTasks { get; set; }
-    public int JobProgress { get; set; } // 0–100, based on completed/total
+    public int JobProgress { get; set; } // 0â€“100, based on completed/total
+
+    public JobState Clone()
+    {
+        return new JobState
+        {
+            StartedAt = StartedAt,
+            Status  = Status,
+            SucceededTasks = SucceededTasks,
+            CompletedTasks = CompletedTasks,
+            JobProgress = JobProgress,
+            CancelledTasks = CancelledTasks,
+            CompletedAt = CompletedAt,
+            CorrelationId = CorrelationId,
+            CreatedAt = CreatedAt,
+            FailedTasks = FailedTasks,
+            FailFast = FailFast,
+            JobId = JobId,
+            MaxDegreeOfParallelism = MaxDegreeOfParallelism,
+            Name = Name,
+            QueuedTasks = QueuedTasks,
+            RunningTasks = RunningTasks,
+            Tasks = Tasks.ToDictionary(c=>c.Key, c => c.Value.Clone()),
+            TelemetryProviderKey = TelemetryProviderKey,
+            TotalTasks = TotalTasks,
+        };
+    }
 }

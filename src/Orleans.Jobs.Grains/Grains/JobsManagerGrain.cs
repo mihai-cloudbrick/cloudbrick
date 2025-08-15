@@ -8,7 +8,7 @@ using Cloudbrick.Orleans.Jobs.Abstractions.Models;
 
 namespace Cloudbrick.Orleans.Jobs.Grains;
 
-public class JobsManagerGrain : Grain, IJobsManagerGrain
+internal class JobsManagerGrain : Grain, IJobsManagerGrain
 {
     private readonly IPersistentState<List<Guid>> _jobs;
 

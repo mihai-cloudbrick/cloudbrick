@@ -15,7 +15,7 @@ using Cloudbrick.Orleans.Jobs.Infra;
 
 namespace Cloudbrick.Orleans.Jobs.Grains;
 
-public class JobGrain : Grain, IJobGrain
+internal class JobGrain : Grain, IJobGrain
 {
     private readonly IPersistentState<JobState> _state;
     private readonly ILogger<JobGrain> _logger;
@@ -93,7 +93,7 @@ public class JobGrain : Grain, IJobGrain
         if (DagValidator.HasCycle(graph.ToDictionary(k => k.Key, k => k.Value.ToList())))
             throw new InvalidOperationException("Job has cyclic dependencies.");
 
-        await _state.WriteStateAsync();
+        await _state.WriteWithRetry(_state.State.Clone());
 
         await RecalculateAndEmitSnapshotAsync(forcePersist: false, forceEmit: true);
 
@@ -109,7 +109,7 @@ public class JobGrain : Grain, IJobGrain
 
         _state.State.Status = JobStatus.Running;
         _state.State.StartedAt = DateTimeOffset.UtcNow;
-        await _state.WriteStateAsync();
+        await _state.WriteWithRetry(_state.State.Clone());
         await EmitAsync(new ExecutionEvent
         {
             EventType = ExecutionEventType.StatusChanged,
@@ -153,7 +153,7 @@ public class JobGrain : Grain, IJobGrain
                     changed = true;
                 }
             }
-            if (changed) await _state.WriteStateAsync();
+            if (changed) await _state.WriteWithRetry(_state.State.Clone());
             await RecalculateAndEmitSnapshotAsync();
             await TryFinalizeIfTerminalAsync();
             return;
@@ -172,7 +172,7 @@ public class JobGrain : Grain, IJobGrain
                     changed = true;
                 }
             }
-            if (changed) await _state.WriteStateAsync();
+            if (changed) await _state.WriteWithRetry(_state.State.Clone());
             await RecalculateAndEmitSnapshotAsync();
             await TryFinalizeIfTerminalAsync();
             return;
@@ -207,7 +207,7 @@ public class JobGrain : Grain, IJobGrain
 
             // Mark as queued in JobState so next loop won't re-queue
             _state.State.Tasks[tid].Status = JobTaskStatus.Queued;
-            await _state.WriteStateAsync();
+            await _state.WriteWithRetry(_state.State.Clone());
 
             await RecalculateAndEmitSnapshotAsync(); // throttled snapshot
 
@@ -226,7 +226,7 @@ public class JobGrain : Grain, IJobGrain
             var anyCancelled = _state.State.Tasks.Values.Any(t => t.Status == JobTaskStatus.Cancelled);
             _state.State.CompletedAt = DateTimeOffset.UtcNow;
             _state.State.Status = anyFailed ? JobStatus.Failed : anyCancelled ? JobStatus.Cancelled : JobStatus.Succeeded;
-            await _state.WriteStateAsync();
+            await _state.WriteWithRetry(_state.State.Clone());
             await EmitAsync(new ExecutionEvent { EventType = ExecutionEventType.Completed, JobId = jobId, Message = _state.State.Status.ToString(), CorrelationId = _state.State.CorrelationId });
             _schedulerTimer?.Dispose();
             _schedulerTimer = null;
@@ -285,7 +285,7 @@ public class JobGrain : Grain, IJobGrain
                         case "Cancelled": ts.Status = JobTaskStatus.Cancelled; ts.CompletedAt = DateTimeOffset.UtcNow; break;
                         case "Scheduled": ts.Status = JobTaskStatus.Scheduled; break; // recurring idle
                     }
-                    await _state.WriteStateAsync();
+                    await _state.WriteWithRetry(_state.State.Clone());
                     break;
 
                 case ExecutionEventType.Progress:
@@ -304,14 +304,14 @@ public class JobGrain : Grain, IJobGrain
                         ts.Status = JobTaskStatus.Succeeded;
                         ts.CompletedAt = DateTimeOffset.UtcNow;
                     }
-                    await _state.WriteStateAsync();
+                    await _state.WriteWithRetry(_state.State.Clone());
                     break;
 
                 case ExecutionEventType.Error:
                     ts.Status = JobTaskStatus.Failed;
                     ts.CompletedAt = DateTimeOffset.UtcNow;
                     ts.LastError = evt.Exception ?? "Task failed.";
-                    await _state.WriteStateAsync();
+                    await _state.WriteWithRetry(_state.State.Clone());
                     break;
 
                 case ExecutionEventType.JobSnapshot:
@@ -328,7 +328,7 @@ public class JobGrain : Grain, IJobGrain
     },
     async ex =>
     {
-        _logger.LogWarning(ex, "Task stream '{TaskId}' failed; resubscribing…", taskId);
+        _logger.LogWarning(ex, "Task stream '{TaskId}' failed; resubscribingâ€¦", taskId);
         _taskSubscriptions.Remove(taskId);
         await SubscribeTaskTelemetryAsync(taskId);
     },
@@ -365,7 +365,7 @@ public class JobGrain : Grain, IJobGrain
             }
         }
 
-        await _state.WriteStateAsync();
+        await _state.WriteWithRetry(_state.State.Clone());
 
         // tell listeners the job is paused + refresh counters
         await EmitAsync(new ExecutionEvent
@@ -383,7 +383,7 @@ public class JobGrain : Grain, IJobGrain
         if (_state.State.Status != JobStatus.Paused) return;
 
         _state.State.Status = JobStatus.Running;
-        await _state.WriteStateAsync();
+        await _state.WriteWithRetry(_state.State.Clone());
 
         // Resume tasks that are paused
         foreach (var kv in _state.State.Tasks)
@@ -409,10 +409,12 @@ public class JobGrain : Grain, IJobGrain
 
     public async Task CancelAsync()
     {
+
         if(_state.State.Status is JobStatus.Cancelled or JobStatus.Failed or JobStatus.Succeeded) return;
 
         _state.State.Status = JobStatus.Cancelling;
-        _schedulerTimer?.Dispose(); _schedulerTimer = null;
+        _schedulerTimer?.Dispose(); 
+        _schedulerTimer = null;
 
         foreach (var kv in _state.State.Tasks)
         {
@@ -436,14 +438,14 @@ public class JobGrain : Grain, IJobGrain
             }
         }
 
-        await _state.WriteStateAsync();
+        await _state.WriteWithRetry(_state.State.Clone());
         await RecalculateAndEmitSnapshotAsync(forcePersist: true, forceEmit: true);
         await TryFinalizeIfTerminalAsync();
     }
 
     public Task<JobState> GetStateAsync() => Task.FromResult(_state.State);
 
-    public Task FlushAsync() => _state.WriteStateAsync();
+    public Task FlushAsync() => _state.WriteWithRetry(_state.State.Clone());
 
     public async Task EmitTelemetryAsync(ExecutionEvent evt)
     {
@@ -495,7 +497,9 @@ public class JobGrain : Grain, IJobGrain
         _state.State.JobProgress = percent;
 
         if (forcePersist || shouldEmit)
-            await _state.WriteStateAsync();
+            await _state.WriteWithRetry(_state.State.Clone());
+
+
 
         if (shouldEmit)
         {
