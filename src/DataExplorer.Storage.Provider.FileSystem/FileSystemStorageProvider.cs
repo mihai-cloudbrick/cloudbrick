@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using Microsoft.Extensions.Logging;
 
 namespace Cloudbrick.DataExplorer.Storage.Provider.FileSystem;

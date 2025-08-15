@@ -1,4 +1,4 @@
-﻿namespace Cloudbrick.DataExplorer.Storage.Abstractions;
+namespace Cloudbrick.DataExplorer.Storage.Abstractions;
 
 public enum StorageProviderKind
 {

@@ -1,4 +1,4 @@
-﻿using Cloudbrick.Orleans.Jobs.Abstractions.Enums;
+using Cloudbrick.Orleans.Jobs.Abstractions.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;

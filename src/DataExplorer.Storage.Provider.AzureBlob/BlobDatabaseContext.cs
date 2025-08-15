@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using Azure;
 using Azure.Storage.Blobs;
 using Microsoft.Extensions.Logging;

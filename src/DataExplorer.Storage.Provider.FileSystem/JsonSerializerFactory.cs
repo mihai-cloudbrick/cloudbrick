@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using Cloudbrick.DataExplorer.Storage.Provider.FileSystem;
 using System.Text.Json;
 using System.Text.Json.Serialization;

@@ -1,4 +1,4 @@
-﻿using Cloudbrick.DataExplorer.Storage.Provider.AzureBlob;
+using Cloudbrick.DataExplorer.Storage.Provider.AzureBlob;
 using Cloudbrick.DataExplorer.Storage.Provider.AzureTable;
 using Cloudbrick.DataExplorer.Storage.Provider.Cosmos;
 using Cloudbrick.DataExplorer.Storage.Provider.FileSystem;

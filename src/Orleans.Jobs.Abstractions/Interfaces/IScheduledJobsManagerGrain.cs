@@ -1,4 +1,4 @@
-﻿using Cloudbrick.Orleans.Jobs.Abstractions.Models;
+using Cloudbrick.Orleans.Jobs.Abstractions.Models;
 using Orleans;
 using System;
 using System.Collections.Generic;

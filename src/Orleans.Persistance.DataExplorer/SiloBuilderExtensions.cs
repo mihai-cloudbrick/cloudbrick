@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using Cloudbrick.DataExplorer.Storage.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;

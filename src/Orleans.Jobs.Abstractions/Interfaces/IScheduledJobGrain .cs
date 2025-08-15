@@ -1,4 +1,4 @@
-﻿using Cloudbrick.Orleans.Jobs.Abstractions.Models;
+using Cloudbrick.Orleans.Jobs.Abstractions.Models;
 using Orleans;
 using Orleans.Concurrency;
 using System;

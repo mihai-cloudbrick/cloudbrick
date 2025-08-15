@@ -1,4 +1,4 @@
-﻿using Cloudbrick.Orleans.Jobs.Abstractions.Enums;
+using Cloudbrick.Orleans.Jobs.Abstractions.Enums;
 using Cloudbrick.Orleans.Jobs.Abstractions.Interfaces;
 using Cloudbrick.Orleans.Jobs.Abstractions.Models;
 using Cronos;

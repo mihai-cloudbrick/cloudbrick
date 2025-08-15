@@ -1,4 +1,4 @@
-﻿using Cloudbrick.Orleans.Jobs.Abstractions.Models;
+using Cloudbrick.Orleans.Jobs.Abstractions.Models;
 
 namespace Cloudbrick.Orleans.Jobs.Abstractions.Managers
 {

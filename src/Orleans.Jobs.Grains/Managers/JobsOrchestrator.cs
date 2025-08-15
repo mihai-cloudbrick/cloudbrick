@@ -1,4 +1,4 @@
-﻿using Cloudbrick.Orleans.Jobs.Abstractions.Managers;
+using Cloudbrick.Orleans.Jobs.Abstractions.Managers;
 using System;
 using System.Collections.Generic;
 using System.Linq;

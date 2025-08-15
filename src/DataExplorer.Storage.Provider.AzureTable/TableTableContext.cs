@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using Azure;
 using Azure.Data.Tables;
 using Microsoft.Extensions.Logging;

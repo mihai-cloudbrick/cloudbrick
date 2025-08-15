@@ -1,4 +1,4 @@
-﻿using Cloudbrick.Orleans.Jobs.Abstractions;
+using Cloudbrick.Orleans.Jobs.Abstractions;
 using Cloudbrick.Orleans.Jobs.Abstractions.Models;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
