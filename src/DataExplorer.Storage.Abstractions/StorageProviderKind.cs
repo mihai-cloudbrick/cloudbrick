@@ -5,7 +5,7 @@ public enum StorageProviderKind
     LocalFileSystem,
     AzureBlobStorage,
     AzureTableStorage,
-    CosmosDb,
+    AzureCosmosDb,
     SqlDatabase,
     None
 }

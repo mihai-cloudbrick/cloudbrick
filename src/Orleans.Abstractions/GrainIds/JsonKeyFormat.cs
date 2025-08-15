@@ -1,4 +1,4 @@
-﻿namespace Cloudbrick.Orleans.GrainIds;
+﻿namespace Cloudbrick.Orleans.Abstractions.GrainIds;
 
 public enum JsonKeyFormat
 {

@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components" Version="4.12.1" />
+    <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components.Icons" Version="4.12.1" />
+	  <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components.Icons" Version="4.12.1" />
+	  <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.3" />
+	  <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="9.0.3" />
+	  <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="9.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Components.Blades\Cloudbrick.Components.Blades.csproj" />
+    <ProjectReference Include="..\..\src\Components.Jobs\Cloudbrick.Components.Jobs.csproj" />
+    <ProjectReference Include="..\..\src\Orleans.Jobs.Grains\Cloudbrick.Orleans.Jobs.csproj" />
+    <ProjectReference Include="..\..\src\Orleans.SignalR\Cloudbrick.Orleans.SignalR.csproj" />
+  </ItemGroup>
+</Project>

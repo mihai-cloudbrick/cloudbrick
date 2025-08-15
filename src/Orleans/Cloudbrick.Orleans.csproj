@@ -12,8 +12,12 @@
     <PackageReference Include="Microsoft.Orleans.Reminders" Version="9.2.1" />
   </ItemGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\DataExplorer.Storage.Abstractions\Cloudbrick.DataExplorer.Storage.Abstractions.csproj" />
-	</ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DataExplorer.Storage\Cloudbrick.DataExplorer.Storage.csproj" />
+    <ProjectReference Include="..\Orleans.Jobs.Grains\Cloudbrick.Orleans.Jobs.csproj" />
+    <ProjectReference Include="..\Orleans.Persistance.DataExplorer\Cloudbrick.Orleans.Persistance.DataExplorer.csproj" />
+    <ProjectReference Include="..\Orleans.Reminders.DataExplorer\Cloudbrick.Orleans.Reminders.DataExplorer.csproj" />
+    <ProjectReference Include="..\Orleans.SignalR\Cloudbrick.Orleans.SignalR.csproj" />
+  </ItemGroup>
 
 </Project>

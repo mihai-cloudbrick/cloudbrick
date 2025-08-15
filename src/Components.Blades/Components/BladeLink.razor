@@ -1,0 +1,33 @@
+@inject NavigationManager Nav
+@code {
+    [Parameter] public string? SubscriptionId { get; set; }
+    [Parameter] public string? ResourceGroupName { get; set; }
+    [Parameter] public string? ProviderNamespace { get; set; }
+    [Parameter] public string? ResourceType { get; set; }
+    [Parameter] public string? ResourceName { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private string Href
+        => BuildArmPath(SubscriptionId, ResourceGroupName, ProviderNamespace, ResourceType, ResourceName);
+
+    private static string BuildArmPath(string? sub, string? rg, string? ns, string? type, string? name)
+    {
+        if (string.IsNullOrWhiteSpace(sub)) return "/";
+        var p = $"subscriptions/{Uri.EscapeDataString(sub)}";
+        if (!string.IsNullOrWhiteSpace(rg)) p += $"/resourceGroups/{Uri.EscapeDataString(rg!)}";
+        if (!string.IsNullOrWhiteSpace(ns) && !string.IsNullOrWhiteSpace(type))
+        {
+            p += $"/providers/{Uri.EscapeDataString(ns!)}";
+            foreach (var t in type!.Split('/', StringSplitOptions.RemoveEmptyEntries))
+                p += $"/{Uri.EscapeDataString(t)}";
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                foreach (var n in name!.Split('/', StringSplitOptions.RemoveEmptyEntries))
+                    p += $"/{Uri.EscapeDataString(n)}";
+            }
+        }
+        return "/" + p;
+    }
+}
+
+<a href="@Href">@ChildContent</a>

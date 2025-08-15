@@ -1,0 +1,168 @@
+@using Cloudbrick.Components.Blades.Models
+@using Cloudbrick.Components.Blades.Services
+@using Cloudbrick.Components.Blades.Routing
+@inject NavigationManager Nav
+@inject IBladeManager Blades
+@inject Cloudbrick.Components.Blades.Services.IBladeDirtyRegistry Dirty
+
+@code
+{
+    private bool _updating; private string? _lastUri;
+
+    protected override void OnInitialized()
+    {
+        Nav.LocationChanged += OnLocationChanged;
+        Blades.Changed += OnBladesChanged;
+        ApplyFromUri(Nav.Uri);
+        _lastUri = Nav.Uri;
+    }
+
+    private async void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        if (_updating) return;
+        // pre-check: find divergence and ask closes
+        var current = Blades.ToRouteItems().ToList();
+        if (Routing.ArmPathParser.TryParse(Nav.ToBaseRelativePath(e.Location), out var newArm))
+        {
+            var newItems = BuildItems(newArm).ToList();
+            int diverge = 0;
+            while (diverge < Math.Min(current.Count, newItems.Count) && Same(current[diverge], newItems[diverge]))
+                diverge++;
+
+            for (int i = Blades.Stack.Count - 1; i >= diverge; i--)
+            {
+                var b = Blades.Stack[i];
+                if (!await Dirty.CanCloseAsync(b))
+                {
+                    // cancel navigation
+                    _updating = true;
+                    try { Nav.NavigateTo(_lastUri ?? Nav.Uri, replace: true); }
+                    finally { _updating = false; }
+                    return;
+                }
+            }
+        }
+        ApplyFromUri(e.Location);
+    }
+
+    private void ApplyFromUri(string absolute)
+    {
+        var rel = Nav.ToBaseRelativePath(absolute);
+        if (!ArmPathParser.TryParse(rel, out var arm)) return;
+
+        _updating = true;
+        try
+        {
+            var items = BuildItems(arm).ToList();
+            Blades.RestoreFromRoute(items);
+        }
+        finally { _updating = false; }
+    }
+
+    private IEnumerable<BladeRouteItem> BuildItems(ArmRoute arm)
+    {
+        var items = new List<BladeRouteItem>();
+
+        items.Add(new BladeRouteItem("Portal.Subscription",
+            new Dictionary<string, string> { ["subscriptionId"] = arm.SubscriptionId }));
+
+        if (!string.IsNullOrWhiteSpace(arm.ResourceGroupName))
+        {
+            items.Add(new BladeRouteItem("Portal.ResourceGroup",
+                new Dictionary<string, string> {
+                    ["subscriptionId"] = arm.SubscriptionId,
+                    ["resourceGroupName"] = arm.ResourceGroupName! }));
+        }
+
+        if (!string.IsNullOrWhiteSpace(arm.ProviderNamespace) && arm.Segments.Count > 0)
+        {
+            var typePath = string.Join('/', arm.Segments.Select(s => s.Type));
+            var last = arm.Segments[^1];
+
+            items.Add(new BladeRouteItem("Provider.Type.List",
+                new Dictionary<string, string> {
+                    ["subscriptionId"] = arm.SubscriptionId,
+                    ["resourceGroupName"] = arm.ResourceGroupName ?? "",
+                    ["providerNamespace"] = arm.ProviderNamespace!,
+                    ["resourceType"] = typePath
+                }));
+
+            if (!string.IsNullOrEmpty(last.Name))
+            {
+                var namePath = string.Join('/',
+                    arm.Segments.Where(s => !string.IsNullOrEmpty(s.Name)).Select(s => s.Name));
+
+                items.Add(new BladeRouteItem("Provider.Resource.Details",
+                    new Dictionary<string, string> {
+                        ["subscriptionId"] = arm.SubscriptionId,
+                        ["resourceGroupName"] = arm.ResourceGroupName ?? "",
+                        ["providerNamespace"] = arm.ProviderNamespace!,
+                        ["resourceType"] = typePath,
+                        ["resourceName"] = namePath
+                    }));
+            }
+        }
+        return items;
+    }
+
+    private static bool Same(BladeRouteItem a, BladeRouteItem b)
+    {
+        if (!string.Equals(a.Key, b.Key, StringComparison.OrdinalIgnoreCase)) return false;
+        if (a.Parameters.Count != b.Parameters.Count) return false;
+        foreach (var kv in a.Parameters)
+        {
+            if (!b.Parameters.TryGetValue(kv.Key, out var v)) return false;
+            if (!string.Equals(v, kv.Value, StringComparison.Ordinal)) return false;
+        }
+        return true;
+    }
+
+    private void OnBladesChanged(object? sender, EventArgs e)
+    {
+        if (_updating) return;
+
+        var sub = Get<string>("Portal.Subscription", "subscriptionId");
+        if (sub is null) return;
+
+        var rg = Get<string>("Portal.ResourceGroup", "resourceGroupName");
+        var type = Get<string>("Provider.Resource.Details", "resourceType")
+                   ?? Get<string>("Provider.Type.List", "resourceType");
+        var ns  = Get<string>("Provider.Resource.Details", "providerNamespace")
+                   ?? Get<string>("Provider.Type.List", "providerNamespace");
+        var name = Get<string>("Provider.Resource.Details", "resourceName");
+
+        var path = $"subscriptions/{Uri.EscapeDataString(sub)}";
+        if (!string.IsNullOrWhiteSpace(rg))
+            path += $"/resourceGroups/{Uri.EscapeDataString(rg!)}";
+
+        if (!string.IsNullOrWhiteSpace(ns) && !string.IsNullOrWhiteSpace(type))
+        {
+            path += $"/providers/{Uri.EscapeDataString(ns!)}";
+            for (var i = 0; i < type!.Split('/', StringSplitOptions.RemoveEmptyEntries).Length; i++)
+                path += $"/{Uri.EscapeDataString(type.Split('/')[i])}";
+
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                foreach (var n in name!.Split('/', StringSplitOptions.RemoveEmptyEntries))
+                    path += $"/{Uri.EscapeDataString(n)}";
+            }
+        }
+
+        _updating = true;
+        try { Nav.NavigateTo(path, replace: true); _lastUri = Nav.Uri; }
+        finally { _updating = false; }
+    }
+
+    private T? Get<T>(string key, string param)
+    {
+        var item = Blades.Stack.LastOrDefault(d => d.Key.Equals(key, StringComparison.OrdinalIgnoreCase));
+        if (item is null) return default;
+        return item.Parameters.TryGetValue(param, out var v) && v is T t ? t : default;
+    }
+
+    public void Dispose()
+    {
+        Nav.LocationChanged -= OnLocationChanged;
+        Blades.Changed -= OnBladesChanged;
+    }
+}

@@ -1,0 +1,44 @@
+.cbb-host {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  padding: 12px;
+  overflow-x: auto;
+}
+
+.cbb-host-item { display: flex; flex-direction: column; }
+
+.cbb-host-toolbar {
+  display: flex; align-items: center; gap: 8px; padding: 4px 0;
+}
+
+.cbb-blade {
+  display: flex; flex-direction: column;
+  min-width: 320px; max-width: 100vw;
+  background: var(--colorNeutralBackground1);
+  border: 1px solid var(--colorNeutralStroke1);
+  border-radius: 12px; box-shadow: var(--shadow4);
+  overflow: hidden;
+}
+
+.cbb-blade-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 12px; border-bottom: 1px solid var(--colorNeutralStroke2);
+}
+
+.cbb-title { display:flex; align-items:center; gap:8px; font-weight:600; }
+.cbb-title-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.cbb-blade-body { padding: 12px; overflow: auto; height: calc(100% - 48px); }
+
+
+.cbb-splitter {
+  width: 6px;
+  cursor: col-resize;
+  background: var(--colorNeutralStroke2);
+  border-radius: 3px;
+  margin: 0 4px;
+  align-self: stretch;
+  opacity: .5;
+}
+.cbb-splitter:hover { opacity: .9; }

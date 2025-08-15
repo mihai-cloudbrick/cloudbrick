@@ -5,7 +5,6 @@ using Cloudbrick.DataExplorer.Storage.Provider.Cosmos;
 using Cloudbrick.DataExplorer.Storage.Provider.FileSystem;
 using Cloudbrick.DataExplorer.Storage.Provider.Sql;
 using Microsoft.Extensions.DependencyInjection;
-using System.ComponentModel.Design;
 
 namespace Cloudbrick.DataExplorer.Storage
 {
@@ -20,30 +19,30 @@ namespace Cloudbrick.DataExplorer.Storage
             _services = services;
         }
 
-        public void AddLocalFileSystemDatabase(string databaseId, Action<FileSystemOptions> fileSystemOptions)
+        public void AddLocalFileSystemDatabase(string databaseId, Action<FileSystemOptions> options)
         {
             ThrowIfProviderAlreadyRegistered(StorageProviderKind.LocalFileSystem);
-            _services.AddLocalFileSystemDatabase(databaseId, fileSystemOptions);
+            _services.AddLocalFileSystemDatabase(databaseId, options);
         }
-        public void AddAzureBlobDatabase(string databaseId, Action<BlobOptions> fileSystemOptions)
+        public void AddAzureBlobsDatabase(string databaseId, Action<BlobOptions> options)
         {
             ThrowIfProviderAlreadyRegistered(StorageProviderKind.AzureBlobStorage);
-            _services.AddAzureBlobDatabase(databaseId, fileSystemOptions);
+            _services.AddAzureBlobDatabase(databaseId, options);
         }
-        public void AddLocalFileSystemDatabase(string databaseId, Action<TableOptions> fileSystemOptions)
+        public void AddAzureTablesDatabase(string databaseId, Action<TableOptions> options)
         {
             ThrowIfProviderAlreadyRegistered(StorageProviderKind.AzureTableStorage);
-            _services.AddAzureTableDatabase(databaseId, fileSystemOptions);
+            _services.AddAzureTableDatabase(databaseId, options);
         }
-        public void AddCosmosDatabase(string databaseId, Action<CosmosOptions> fileSystemOptions)
+        public void AddAzureCosmosDatabase(string databaseId, Action<CosmosOptions> options)
         {
-            ThrowIfProviderAlreadyRegistered(StorageProviderKind.CosmosDb);
-            _services.AddCosmosDatabase(databaseId, fileSystemOptions);
+            ThrowIfProviderAlreadyRegistered(StorageProviderKind.AzureCosmosDb);
+            _services.AddAzureCosmosDatabase(databaseId, options);
         }
-        public void AddSqlDatabase(string databaseId, Action<SqlOptions> fileSystemOptions)
+        public void AddSqlDatabase(string databaseId, Action<SqlOptions> options)
         {
             ThrowIfProviderAlreadyRegistered(StorageProviderKind.SqlDatabase);
-            _services.AddSqlDatabase(databaseId, fileSystemOptions);
+            _services.AddSqlDatabase(databaseId, options);
         }
 
         private void ThrowIfProviderAlreadyRegistered(StorageProviderKind toRegister)

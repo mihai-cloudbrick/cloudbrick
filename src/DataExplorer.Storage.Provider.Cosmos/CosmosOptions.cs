@@ -5,7 +5,7 @@ namespace Cloudbrick.DataExplorer.Storage.Provider.Cosmos;
 
 public sealed class CosmosOptions : ProviderOptionsBase
 {
-    public override StorageProviderKind Kind => StorageProviderKind.CosmosDb;
+    public override StorageProviderKind Kind => StorageProviderKind.AzureCosmosDb;
 
     public required string Endpoint { get; set; }
     public required string Key { get; set; }

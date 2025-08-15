@@ -1,0 +1,48 @@
+@inject Cloudbrick.Components.Blades.Services.IBladeManager Blades
+
+<div class="cbb-host" id="cbb-host">
+   @*  @for (int i = 0; i < Blades.Stack.Count; i++)
+    {
+        var idx = i;
+        var desc = Blades.Stack[i];
+
+        <div class="cbb-host-item" data-key="@desc.Key">
+            <div class="cbb-host-toolbar">
+                <FluentButton OnClick="() => Close(idx)" Appearance="Appearance.Hypertext">Close</FluentButton>
+                <FluentDivider />
+            </div>
+
+            <Blade Title="@desc.Key" Size="@desc.Size">
+                <HeaderContent>
+                    <FluentBadge Appearance="Appearance.Neutral">Index @idx</FluentBadge>
+                </HeaderContent>
+                
+                <CascadingValue Value="desc">
+                    @desc.Render()
+                </CascadingValue>
+
+            </Blade>
+        
+        @if (i < Blades.Stack.Count - 1)
+        {
+            <div class="cbb-splitter" data-index="@i"></div>
+        }
+
+    } *@
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        Blades.Changed += OnChanged;
+    }
+
+    private void OnChanged(object? sender, EventArgs e) => InvokeAsync(StateHasChanged);
+
+    private Task Close(int index) => Blades.CloseAsync(index);
+
+    public void Dispose()
+    {
+        Blades.Changed -= OnChanged;
+    }
+}

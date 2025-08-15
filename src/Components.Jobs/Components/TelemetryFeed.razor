@@ -1,0 +1,66 @@
+@using Cloudbrick.Components.Jobs.Services
+@using Cloudbrick.Orleans.Jobs.Abstractions.Enums
+@implements IAsyncDisposable
+@inject SignalRTelemetryClient Telemetry
+
+<FluentDataGrid Items="@events.AsQueryable()" GridTemplateColumns="0.9fr 0.9fr 1.2fr 3fr">
+    <TemplateColumn Title="Time">
+        <span>@context.Timestamp.ToLocalTime().ToString("T")</span>
+    </TemplateColumn>
+    <TemplateColumn Title="Type">
+        <FluentBadge Appearance="@TypeAppearance(context.EventType)">@context.EventType</FluentBadge>
+    </TemplateColumn>
+    <PropertyColumn Title="Task" Property="@(e => e.TaskId)" />
+    <TemplateColumn Title="Message">
+        <span>
+            @context.Message
+            @if (context.Progress.HasValue)
+            {
+                <em> (@context.Progress%)</em>
+            }
+            @if (!string.IsNullOrWhiteSpace(context.Exception))
+            {
+                <strong style="color:var(--error-color);"> — @context.Exception</strong>
+            }
+        </span>
+    </TemplateColumn>
+</FluentDataGrid>
+
+@code {
+    [Parameter] public Guid JobId { get; set; }
+
+    private List<ExecutionEventModel> events = new();
+    private bool _subscribed;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!_subscribed && JobId != Guid.Empty)
+        {
+            await Telemetry.StartAsync();
+            await Telemetry.SubscribeAsync(JobId, evt =>
+            {
+                events.Insert(0, evt);
+                InvokeAsync(StateHasChanged);
+            });
+            _subscribed = true;
+        }
+    }
+
+    private static Appearance TypeAppearance(ExecutionEventType t) => t switch
+    {
+        ExecutionEventType.Error => Appearance.Neutral,
+        ExecutionEventType.Completed => Appearance.Accent,
+        ExecutionEventType.StatusChanged => Appearance.Neutral,
+        ExecutionEventType.Progress => Appearance.Neutral,
+        ExecutionEventType.JobSnapshot => Appearance.Accent,
+        _ => Appearance.Neutral
+    };
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_subscribed)
+        {
+            await Telemetry.UnsubscribeAsync(JobId);
+        }
+    }
+}

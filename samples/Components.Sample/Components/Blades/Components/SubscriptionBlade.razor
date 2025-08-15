@@ -1,0 +1,19 @@
+@using Microsoft.FluentUI.AspNetCore.Components
+@inject Cloudbrick.Components.Blades.Services.IBladeManager Blades
+@code { [Parameter] public string? SubscriptionId { get; set; } }
+
+<Blade Title="Subscription" @* IconName="FolderOpen24Regular" *@ Size="BladeSize.Narrow">
+    <ChildContent>
+        <FluentBadge Appearance="Appearance.Neutral">Sub: @SubscriptionId</FluentBadge>
+        <FluentDivider />
+        <FluentButton OnClick="@OpenRG">Open RG list (sample)</FluentButton>
+    </ChildContent>
+</Blade>
+
+@code {
+    private Task OpenRG()
+        => Blades.OpenAsync("Portal.ResourceGroup",
+            new Dictionary<string, object?> {
+                ["subscriptionId"] = SubscriptionId,
+                ["resourceGroupName"] = "rg-demo" });
+}

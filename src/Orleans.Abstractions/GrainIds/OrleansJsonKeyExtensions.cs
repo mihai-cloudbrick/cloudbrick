@@ -1,11 +1,12 @@
 ﻿using Orleans;
+using Orleans.Runtime;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Cloudbrick.Orleans.GrainIds;
+namespace Cloudbrick.Orleans.Abstractions.GrainIds;
 
 public static class OrleansJsonKeyExtensions
 {

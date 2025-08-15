@@ -7,7 +7,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace Cloudbrick.Orleans.GrainIds;
+namespace Cloudbrick.Orleans.Abstractions.GrainIds;
 
 
 public static class GrainKeyJsonHelper
