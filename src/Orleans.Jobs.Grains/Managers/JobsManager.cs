@@ -23,7 +23,8 @@ namespace Cloudbrick.Orleans.Jobs.Managers
             foreach (var id in ids)
             {
                 var st = await mgr.GetJobStateAsync(id);
-                list.Add(ApiModelMapper.ToSummary(st));
+                if (st != null)
+                    list.Add(ApiModelMapper.ToSummary(st));
             }
             return list;
         }

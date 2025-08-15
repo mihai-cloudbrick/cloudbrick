@@ -31,17 +31,18 @@ public class RetryTests : IClassFixture<ClusterFixture>
         var jobId = await mgr.CreateJobAsync(spec);
         await mgr.StartJobAsync(jobId);
 
-        JobState state;
+        JobState? state;
         int guard = 0;
         do
         {
             await Task.Delay(50);
             state = await mgr.GetJobStateAsync(jobId);
+            state.Should().NotBeNull();
             guard++;
             if (guard > 200) break;
-        } while (state.Status != Cloudbrick.Orleans.Jobs.Abstractions.Enums.JobStatus.Succeeded);
+        } while (state!.Status != Cloudbrick.Orleans.Jobs.Abstractions.Enums.JobStatus.Succeeded);
 
-        state.Tasks["t1"].Attempts.Should().BeGreaterThan(0);
+        state!.Tasks["t1"].Attempts.Should().BeGreaterThan(0);
         state.Status.Should().Be(Cloudbrick.Orleans.Jobs.Abstractions.Enums.JobStatus.Succeeded);
     }
 }

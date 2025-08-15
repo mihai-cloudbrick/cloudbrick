@@ -67,6 +67,11 @@ class Program
             while (true)
             {
                 var state = await jobs.GetJobStateAsync(jobId);
+                if (state == null)
+                {
+                    Console.WriteLine("Job not found");
+                    break;
+                }
                 if (state.Status is JobStatus.Succeeded
                     or JobStatus.Failed
                     or JobStatus.Cancelled)
@@ -126,6 +131,11 @@ class Program
             while (true)
             {
                 var state = await jobs.GetJobStateAsync(jobId);
+                if (state == null)
+                {
+                    Console.WriteLine("Job not found");
+                    break;
+                }
                 if (state.Status is JobStatus.Succeeded
                     or JobStatus.Failed
                     or JobStatus.Cancelled)

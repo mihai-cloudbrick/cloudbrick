@@ -15,6 +15,6 @@ public interface IJobsManagerGrain : IGrainWithStringKey
     Task ResumeJobAsync(Guid jobId);
     Task CancelJobAsync(Guid jobId);
     Task DeleteJobAsync(Guid jobId);
-    Task<JobState> GetJobStateAsync(Guid jobId);
+    Task<JobState?> GetJobStateAsync(Guid jobId);
     Task<List<Guid>> ListJobsAsync();
 }
