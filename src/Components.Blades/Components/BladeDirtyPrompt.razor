@@ -1,0 +1,62 @@
+@using Cloudbrick.Components.Blades.Models
+@using Cloudbrick.Components.Blades.Services
+
+@inject IBladeDirtyRegistry Dirty
+
+
+
+<FluentDialog @ref="dialog" Style="max-width:520px">
+    <DialogHeader>
+       @*  <FluentIcon Name="Warning24Regular" /> *@
+        <span>Unsaved changes</span>
+    </DialogHeader>
+    <DialogBody>
+        <p>You have unsaved changes. Do you want to discard them and close?</p>
+    </DialogBody>
+    <DialogFooter>
+        <FluentButton OnClick="@Cancel">Cancel</FluentButton>
+        <FluentButton Appearance="Appearance.Accent" OnClick="@Discard">Discard</FluentButton>
+    </DialogFooter>
+</FluentDialog>
+
+@code {
+    private FluentDialog? dialog;
+    private TaskCompletionSource<bool>? tcs;
+    [CascadingParameter] public BladeDescriptor? Blade { get; set; }
+    protected override void OnParametersSet()
+    {
+        if (Blade is not null)
+        {
+            // Register confirm delegate if not already set
+            Dirty.SetDirty(Blade, Dirty.IsDirty(Blade), ConfirmAsync);
+        }
+    }
+
+    public void ShowFor(BladeDescriptor blade)
+    {
+        Blade = blade;
+        StateHasChanged();
+        dialog?.Show();
+    }
+
+    private Task<bool> ConfirmAsync()
+    {
+        tcs = new TaskCompletionSource<bool>();
+        InvokeAsync(() => dialog?.Show());
+        return tcs.Task;
+    }
+
+    private async Task Cancel()
+    {
+        await dialog?.CloseAsync();
+        await Task.Yield();
+        tcs?.TrySetResult(false);
+    }
+
+    private async Task Discard()
+    {
+        await dialog?.CloseAsync();
+        await Task.Yield();
+        tcs?.TrySetResult(true);
+    }
+}

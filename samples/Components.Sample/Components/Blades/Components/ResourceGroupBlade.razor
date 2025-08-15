@@ -1,0 +1,24 @@
+@inject Cloudbrick.Components.Blades.Services.IBladeManager Blades
+@code {
+    [Parameter] public string? SubscriptionId { get; set; }
+    [Parameter] public string? ResourceGroupName { get; set; }
+}
+
+<Blade Title="Resource Group" @* IconName="Folder24Regular" *@ Size="BladeSize.Default">
+    <ChildContent>
+        <FluentBadge>RG: @ResourceGroupName</FluentBadge>
+        <FluentDivider />
+        <FluentButton OnClick="@OpenType">Storage Accounts</FluentButton>
+    </ChildContent>
+</Blade>
+
+@code {
+    private Task OpenType()
+        => Blades.OpenAsync("Provider.Type.List",
+            new Dictionary<string, object?> {
+                ["subscriptionId"] = SubscriptionId,
+                ["resourceGroupName"] = ResourceGroupName,
+                ["providerNamespace"] = "Microsoft.Storage",
+                ["resourceType"] = "storageAccounts"
+            });
+}

@@ -1,0 +1,28 @@
+@using Cloudbrick.Components.Jobs.Services
+@inject IJobsBackend Backend
+@inject ILogger<JobControls> Log
+
+<div style="display:flex; gap:8px;">
+    <FluentButton OnClick="Pause" Appearance="Appearance.Stealth" Disabled="@(!CanPause)">Pause</FluentButton>
+    <FluentButton OnClick="Resume" Appearance="Appearance.Stealth" Disabled="@(!CanResume)">Resume</FluentButton>
+    <FluentButton OnClick="Cancel" Appearance="Appearance.Lightweight" Disabled="@(!CanCancel)">Cancel</FluentButton>
+    @if (ShowRefresh)
+    {
+        <FluentButton OnClick="Refresh" Appearance="Appearance.Accent">Refresh</FluentButton>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid JobId { get; set; }
+    [Parameter] public bool CanPause { get; set; } = true;
+    [Parameter] public bool CanResume { get; set; } = true;
+    [Parameter] public bool CanCancel { get; set; } = true;
+    [Parameter] public bool ShowRefresh { get; set; } = false;
+    [Parameter] public EventCallback OnChanged { get; set; }
+    [Parameter] public EventCallback OnRefresh { get; set; }
+
+    private async Task Pause()  { await Backend.PauseJobAsync(JobId);  if (OnChanged.HasDelegate) await OnChanged.InvokeAsync(); }
+    private async Task Resume() { await Backend.ResumeJobAsync(JobId); if (OnChanged.HasDelegate) await OnChanged.InvokeAsync(); }
+    private async Task Cancel() { await Backend.CancelJobAsync(JobId); if (OnChanged.HasDelegate) await OnChanged.InvokeAsync(); }
+    private async Task Refresh(){ if (OnRefresh.HasDelegate) await OnRefresh.InvokeAsync(); }
+}

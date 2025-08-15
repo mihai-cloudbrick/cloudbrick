@@ -1,0 +1,68 @@
+@using Cloudbrick.Components.Jobs.Services
+@using Cloudbrick.Components.Jobs.Options
+@using Cloudbrick.Orleans.Jobs.Abstractions.Enums
+@using Cloudbrick.Orleans.Jobs.Abstractions.Models
+@inject IJobsBackend Backend
+@inject IOptions<CloudbrickJobsOptions> Opt
+
+<h3>Jobs</h3>
+
+@if (_loading)
+{
+    <FluentProgressRing />
+}
+else
+{
+    <FluentDataGrid Items="@_rows.AsQueryable()" GridTemplateColumns="2.2fr 1fr 1fr 1fr 2fr">
+        <PropertyColumn Property="@(j => j.JobId)" Title="Id" />
+        <TemplateColumn Title="Status">
+            <FluentBadge Appearance="@JobAppearance(context.Status)">@context.Status</FluentBadge>
+        </TemplateColumn>
+        <TemplateColumn Title="%">
+           <div style="min-width:120px;"><FluentProgressBar Value="@context.JobProgress" /></div>
+        </TemplateColumn>
+        <PropertyColumn Property="@(j => j.StartedAt)" Title="Started" />
+        <TemplateColumn Title="Actions">
+            <div style="display:flex; gap:8px;">
+                <FluentAnchor Href="@($"/jobs/{context.JobId}")">Open</FluentAnchor>
+            </div>
+        </TemplateColumn>
+    </FluentDataGrid>
+}
+
+@code {
+    private bool _loading = true;
+    private List<JobSummary> _rows = new();
+    private System.Threading.Timer? _timer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+        _timer = new System.Threading.Timer(async _ =>
+        {
+            try { await LoadAsync(); await InvokeAsync(StateHasChanged); } catch { }
+        }, null, dueTime: Opt.Value.GridRefreshIntervalMs, period: Opt.Value.GridRefreshIntervalMs);
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        _rows = await Backend.ListJobsAsync();
+        _loading = false;
+    }
+
+    private static Appearance JobAppearance(JobStatus s) => s switch
+    {
+        JobStatus.Running => Appearance.Accent,
+        JobStatus.Paused => Appearance.Neutral,
+        JobStatus.Failed => Appearance.Neutral,
+        JobStatus.Cancelled => Appearance.Neutral,
+        JobStatus.Succeeded => Appearance.Accent,
+        _ => Appearance.Neutral
+    };
+
+    public void Dispose()
+    {
+        _timer?.Dispose();
+    }
+}

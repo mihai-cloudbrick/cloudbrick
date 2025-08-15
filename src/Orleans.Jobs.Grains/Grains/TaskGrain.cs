@@ -214,7 +214,7 @@ public class TaskGrain : Grain, ITaskGrain
         if (due < TimeSpan.Zero) due = TimeSpan.Zero;
 
         _cronTimer?.Dispose();
-        _cronTimer = RegisterTimer(_ => CronFireAsync(), null, due, Timeout.InfiniteTimeSpan);
+        _cronTimer = this.RegisterGrainTimer(_ => CronFireAsync(), due, Timeout.InfiniteTimeSpan);
 
         // optional: emit upcoming run as telemetry
         _ = EmitAsync(new ExecutionEvent

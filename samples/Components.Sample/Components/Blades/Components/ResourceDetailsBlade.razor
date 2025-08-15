@@ -1,0 +1,65 @@
+@inject NavigationManager Nav
+
+
+<Blade Title="Resource" @* IconName="Database24Regular" *@ Size="BladeSize.Wide">
+    <ChildContent>
+        <FluentBadge>Sub: @SubscriptionId</FluentBadge>
+        <FluentBadge>RG: @ResourceGroupName</FluentBadge>
+        <FluentBadge>@ProviderNamespace/@ResourceType</FluentBadge>
+        <FluentBadge>name: @ResourceName</FluentBadge>
+        <FluentDivider />
+        <BladeCommandBar Commands="@Commands" />
+        <p>Deep link:</p>
+        <code>
+@($"subscriptions/{Uri.EscapeDataString(SubscriptionId??"")}/resourceGroups/{Uri.EscapeDataString(ResourceGroupName??"")}/providers/{Uri.EscapeDataString(ProviderNamespace??"")}/{Uri.EscapeDataString(ResourceType??"")}/{Uri.EscapeDataString(ResourceName??"")}")
+        </code>
+    </ChildContent>
+
+</Blade>
+
+<BladeDirtyPrompt />
+
+@code {
+    [Parameter] public string? SubscriptionId { get; set; }
+    [Parameter] public string? ResourceGroupName { get; set; }
+    [Parameter] public string? ProviderNamespace { get; set; }
+    [Parameter] public string? ResourceType { get; set; }
+    [Parameter] public string? ResourceName { get; set; }
+    private IEnumerable<BladeCommand> Commands => new[]
+    {
+        new BladeCommand
+        {
+            Id = "save", Label = "Save", IconName = "Save24Regular", IsPrimary = true,
+            ExecuteAsync = async () => { await Task.Delay(10); MarkClean(); }
+        },
+        new BladeCommand
+        {
+            Id = "delete", Label = "Delete", IconName = "Delete24Regular",
+            ExecuteAsync = async () => { await Task.Delay(10); }
+        }
+    };
+    [CascadingParameter] public BladeDescriptor? Blade { get; set; }
+    [Inject] public IBladeDirtyRegistry Dirty { get; set; } = default!;
+
+    private void MarkDirty()
+    {
+        if (Blade is null) return;
+        Dirty.SetDirty(Blade, true, async () =>
+        {
+            // basic JS confirm replacement using Blazor prompt is outside scope; just simulate user accepts
+            // In a real app, show a FluentDialog. Here we allow closing when dirty by returning true.
+            await Task.CompletedTask;
+            return confirmClose;
+        });
+        confirmClose = false; // default to cancel
+    }
+
+    private void MarkClean()
+    {
+        if (Blade is null) return;
+        Dirty.SetDirty(Blade, false, null);
+    }
+
+    private bool confirmClose = true; // allow toggling in debugger if needed
+}
+

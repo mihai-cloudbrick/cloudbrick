@@ -1,0 +1,230 @@
+@using Cloudbrick.Components.Jobs.Services
+@using Cloudbrick.Orleans.Jobs.Abstractions.Enums
+@implements IAsyncDisposable
+@inject IJobsBackend Backend
+@inject SignalRTelemetryClient Telemetry
+
+@if (_loading)
+{
+    <FluentProgressRing />
+}
+else if (_job is null)
+{
+    <FluentCard>Job not found.</FluentCard>
+}
+else
+{
+    <FluentCard style="margin-bottom:12px;">
+        <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+            <FluentBadge Appearance="@JobAppearance(_job.Status)">@_job.Status</FluentBadge>
+            <FluentBadge>Correlation: @_job.CorrelationId</FluentBadge>
+            @if (_job.StartedAt is not null) { <FluentBadge>Started: @_job.StartedAt?.ToLocalTime().ToString("u")</FluentBadge> }
+            @if (_job.CompletedAt is not null) { <FluentBadge>Completed: @_job.CompletedAt?.ToLocalTime().ToString("u")</FluentBadge> }
+            <div style="margin-left:auto;">
+                <JobControls JobId="@_job.JobId"
+                             CanPause="@(_job.Status == JobStatus.Running)"
+                             CanResume="@(_job.Status == JobStatus.Paused)"
+                             CanCancel="@(_job.Status is JobStatus.Running or JobStatus.Paused)"
+                             OnChanged="Reload" ShowRefresh="true" OnRefresh="Reload" />
+            </div>
+        </div>
+        <div style="margin-top:8px; min-width:260px;">
+            <FluentProgressRing Value="@_job.JobProgress" />
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:6px;">
+                <FluentBadge Appearance="Appearance.Accent">Completed: @_job.CompletedTasks / @_job.TotalTasks (@_job.JobProgress%)</FluentBadge>
+                <FluentBadge>Running: @_job.RunningTasks</FluentBadge>
+                <FluentBadge>Queued: @_job.QueuedTasks</FluentBadge>
+                <FluentBadge Appearance="Appearance.Neutral">Failed: @_job.FailedTasks</FluentBadge>
+                <FluentBadge Appearance="Appearance.Neutral">Cancelled: @_job.CancelledTasks</FluentBadge>
+            </div>
+        </div>
+    </FluentCard>
+
+    @if (_errors.Count > 0)
+    {
+        <FluentCard style="border-left:4px solid var(--error-color); padding:12px; margin-bottom:12px;">
+            <h4 style="margin-top:0;">Errors</h4>
+            <ul>
+                @foreach (var e in _errors)
+                {
+                    <li><b>@e.TaskId</b>: @e.Error</li>
+                }
+            </ul>
+        </FluentCard>
+    }
+
+    <h3>Tasks</h3>
+    <FluentDataGrid Items="@_taskRows.AsQueryable()" GridTemplateColumns="1fr 1fr 1fr 1fr 1fr 1.2fr">
+        <PropertyColumn Property="@(t => t.TaskId)" Title="Task" />
+        <PropertyColumn Property="@(t => t.ExecutorType)" Title="Executor" />
+        <TemplateColumn Title="Progress">
+           <div style="min-width:180px;"><FluentProgressRing Value="@context.Progress" /></div>
+        </TemplateColumn>
+        <TemplateColumn Title="Status">
+            <FluentBadge Appearance="@TaskAppearance(context.Status)">@(context.Status.ToString())</FluentBadge>
+        </TemplateColumn>
+        <PropertyColumn Property="@(t => t.RunCount)" Title="Runs" />
+        <PropertyColumn Property="@(t => t.NextRunAt)" Title="Next Run" />
+    </FluentDataGrid>
+
+    <h3>Telemetry</h3>
+    <TelemetryFeed JobId="@_job.JobId" />
+}
+
+@code {
+    [Parameter] public Guid JobId { get; set; }
+
+    private JobDetailModel? _job;
+    private bool _loading = true;
+    private List<TaskRow> _taskRows = new();
+    private List<ErrorRow> _errors = new();
+    private bool _hubReady;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await Reload();
+        if (!_hubReady && JobId != Guid.Empty)
+        {
+            await Telemetry.StartAsync();
+            await Telemetry.SubscribeAsync(JobId, OnEvent);
+            _hubReady = true;
+        }
+    }
+
+    private async Task Reload()
+    {
+        _loading = true;
+        _job = await Backend.GetJobAsync(JobId);
+        _taskRows = new List<TaskRow>();
+        foreach (var kv in _job.Tasks)
+        {
+            var t = kv.Value;
+            _taskRows.Add(new TaskRow {
+                TaskId = t.TaskId, ExecutorType = t.ExecutorType, Progress = t.Progress,
+                Status = t.Status, RunCount = t.RunCount, NextRunAt = t.NextRunAt?.ToLocalTime().ToString("u")
+            });
+        }
+        _errors = new List<ErrorRow>();
+        foreach (var kv in _job.Tasks)
+        {
+            var t = kv.Value;
+            if (t.Status == JobTaskStatus.Failed || t.Status == JobTaskStatus.Cancelled)
+                _errors.Add(new ErrorRow { TaskId = t.TaskId, Error = t.LastError ?? "Unknown error." });
+        }
+        _loading = false;
+    }
+
+    private async void OnEvent(ExecutionEventModel evt)
+    {
+        if (_job is null || evt.JobId != _job.JobId) return;
+
+        if (string.IsNullOrWhiteSpace(evt.TaskId))
+        {
+            if (evt.EventType == ExecutionEventType.JobSnapshot)
+            {
+                _job.TotalTasks     = evt.TotalTasks     ?? _job.TotalTasks;
+                _job.CompletedTasks = evt.CompletedTasks ?? _job.CompletedTasks;
+                _job.RunningTasks   = evt.RunningTasks   ?? _job.RunningTasks;
+                _job.QueuedTasks    = evt.QueuedTasks    ?? _job.QueuedTasks;
+                _job.FailedTasks    = evt.FailedTasks    ?? _job.FailedTasks;
+                _job.CancelledTasks = evt.CancelledTasks ?? _job.CancelledTasks;
+                _job.JobProgress    = evt.JobProgress    ?? _job.JobProgress;
+            }
+            else if (evt.EventType == ExecutionEventType.StatusChanged && evt.Message is not null)
+            {
+                _job.Status = evt.Message switch
+                {
+                    "Running"   => JobStatus.Running,
+                    "Paused"    => JobStatus.Paused,
+                    "Cancelled" => JobStatus.Cancelled,
+                    _           => _job.Status
+                };
+            }
+            else if (evt.EventType == ExecutionEventType.Completed)
+            {
+                _job.Status = JobStatus.Succeeded;
+                _job.CompletedAt = DateTimeOffset.Now;
+            }
+        }
+        else
+        {
+            var tr = _taskRows.Find(x => x.TaskId == evt.TaskId);
+            if (tr is null)
+            {
+                if (_job.Tasks.TryGetValue(evt.TaskId!, out var ts))
+                {
+                    tr = new TaskRow { TaskId = ts.TaskId, ExecutorType = ts.ExecutorType, Progress = ts.Progress,
+                                       Status = ts.Status, RunCount = ts.RunCount, NextRunAt = ts.NextRunAt?.ToLocalTime().ToString("u") };
+                    _taskRows.Add(tr);
+                }
+            }
+            if (tr != null)
+            {
+                switch (evt.EventType)
+                {
+                    case ExecutionEventType.StatusChanged:
+                        tr.Status = evt.Message switch
+                        {
+                            "Queued"    => JobTaskStatus.Queued,
+                            "Running" => JobTaskStatus.Running,
+                            "Paused" => JobTaskStatus.Paused,
+                            "Cancelled" => JobTaskStatus.Cancelled,
+                            "Scheduled" => JobTaskStatus.Scheduled,
+                            _ => tr.Status
+                        }; break;
+                    case ExecutionEventType.Progress:
+                        if (evt.Progress.HasValue) tr.Progress = evt.Progress.Value;
+                        break;
+                    case ExecutionEventType.Completed:
+                        tr.Status = JobTaskStatus.Succeeded; tr.Progress = 100;
+                        break;
+                    case ExecutionEventType.Error:
+                        tr.Status = JobTaskStatus.Failed;
+                        _errors.Add(new ErrorRow { TaskId = tr.TaskId, Error = evt.Exception ?? "Task failed." });
+                        break;
+                }
+            }
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private static Appearance JobAppearance(JobStatus s) => s switch
+    {
+        JobStatus.Running => Appearance.Accent,
+        JobStatus.Paused => Appearance.Neutral,
+        JobStatus.Failed => Appearance.Neutral,
+        JobStatus.Cancelled => Appearance.Neutral,
+        JobStatus.Succeeded => Appearance.Accent,
+        _ => Appearance.Neutral
+    };
+
+    private static Appearance TaskAppearance(JobTaskStatus s) => s switch
+    {
+        JobTaskStatus.Running => Appearance.Accent,
+        JobTaskStatus.Paused => Appearance.Neutral,
+        JobTaskStatus.Failed => Appearance.Neutral,
+        JobTaskStatus.Cancelled => Appearance.Neutral,
+        JobTaskStatus.Succeeded => Appearance.Neutral,
+        JobTaskStatus.Queued => Appearance.Neutral,
+        JobTaskStatus.Scheduled => Appearance.Neutral,
+        _ => Appearance.Neutral
+    };
+
+    class TaskRow
+    {
+        public string TaskId { get; set; } = string.Empty;
+        public string ExecutorType { get; set; } = string.Empty;
+        public int Progress { get; set; }
+        public JobTaskStatus Status { get; set; }
+        public int RunCount { get; set; }
+        public string? NextRunAt { get; set; }
+    }
+
+    class ErrorRow { public string TaskId { get; set; } = string.Empty; public string Error { get; set; } = string.Empty; }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_hubReady) await Telemetry.UnsubscribeAsync(JobId);
+    }
+}

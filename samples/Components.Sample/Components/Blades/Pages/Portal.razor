@@ -1,0 +1,16 @@
+@* @page "/" *@
+@page "/subscriptions/{subscriptionId}"
+@page "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}"
+@page "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{providerNamespace}/{*rest}"
+
+<FluentProvider>
+    <ArmUrlSync />
+    <BladeHost />
+</FluentProvider>
+
+@code {
+    [Parameter] public string? subscriptionId { get; set; }
+    [Parameter] public string? resourceGroupName { get; set; }
+    [Parameter] public string? providerNamespace { get; set; }
+    [Parameter] public string? rest { get; set; }
+}

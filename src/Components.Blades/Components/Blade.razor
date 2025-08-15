@@ -1,0 +1,28 @@
+@using Cloudbrick.Components.Blades.Models
+@inherits ComponentBase
+
+<div class="cbb-blade" style="width:@((int)Size)px">
+    <div class="cbb-blade-header">
+        <div class="cbb-title">
+            <FluentIcon Value="@IconName" />
+            <span class="cbb-title-text">@Title</span>
+        </div>
+        <div class="cbb-actions">
+            @if (HeaderContent is not null)
+            {
+                @HeaderContent
+            }
+        </div>
+    </div>
+    <div class="cbb-blade-body">
+        @ChildContent
+    </div>
+</div>
+
+@code {
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public Icon IconName { get; set; } 
+    [Parameter] public BladeSize Size { get; set; } = BladeSize.Default;
+    [Parameter] public RenderFragment? HeaderContent { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

@@ -1,0 +1,7 @@
+﻿@page "/jobs/{id:guid}"
+<JobDetail JobId="@Id" />
+
+@code{
+    [Parameter]
+    public Guid Id { get; set; }
+}

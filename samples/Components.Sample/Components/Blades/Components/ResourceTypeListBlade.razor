@@ -1,0 +1,33 @@
+@inject Cloudbrick.Components.Blades.Services.IBladeManager Blades
+@code {
+    [Parameter] public string? SubscriptionId { get; set; }
+    [Parameter] public string? ResourceGroupName { get; set; }
+    [Parameter] public string? ProviderNamespace { get; set; }
+    [Parameter] public string? ResourceType { get; set; }
+
+    private record Row(string Name);
+    private List<Row> Data = new() { new("acc-001"), new("acc-002") };
+}
+
+<Blade Title="@($"{ProviderNamespace}/{ResourceType}")" @* IconName="DatabaseMultiple24Regular" *@ Size="BladeSize.Default">
+    <ChildContent>
+        <FluentDataGrid Items="@Data.AsQueryable()">
+            <PropertyColumn Property="@(c => c.Name)" Title="Name" />
+            <TemplateColumn Title="Open">
+                <FluentButton OnClick="@(() => Open(@context.Name))">Open</FluentButton>
+            </TemplateColumn>
+        </FluentDataGrid>
+    </ChildContent>
+</Blade>
+
+@code {
+    private Task Open(string name)
+        => Blades.OpenAsync("Provider.Resource.Details",
+            new Dictionary<string, object?> {
+                ["subscriptionId"] = SubscriptionId,
+                ["resourceGroupName"] = ResourceGroupName,
+                ["providerNamespace"] = ProviderNamespace,
+                ["resourceType"] = ResourceType,
+                ["resourceName"] = name
+            }, BladeSize.Wide);
+}

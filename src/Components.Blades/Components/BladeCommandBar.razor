@@ -1,0 +1,31 @@
+@using Cloudbrick.Components.Blades.Models
+
+<div class="cbb-commandbar">
+    <FluentToolbar>
+        @if (Commands is not null)
+        {
+            foreach (var cmd in Commands)
+            {
+                <FluentButton Appearance="@(cmd.IsPrimary ? Appearance.Accent : Appearance.Neutral)"
+                              Disabled="@(!Can(cmd))"
+                              OnClick="@(() => Run(cmd))">
+                    @if (!string.IsNullOrEmpty(cmd.IconName))
+                    {
+                        @* <FluentIcon ="@cmd.IconName" Size="16" /> *@
+                        @: 
+                    }
+                    @cmd.Label
+                </FluentButton>
+            }
+        }
+    </FluentToolbar>
+</div>
+
+@code {
+    [Parameter] public IEnumerable<BladeCommand>? Commands { get; set; }
+
+    private bool Can(BladeCommand cmd)
+        => cmd.CanExecuteAsync is null ? true : (cmd.CanExecuteAsync.Invoke().GetAwaiter().GetResult());
+
+    private async Task Run(BladeCommand cmd) => await cmd.ExecuteAsync();
+}
