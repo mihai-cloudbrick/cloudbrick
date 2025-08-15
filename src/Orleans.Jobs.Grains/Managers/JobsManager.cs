@@ -42,22 +42,32 @@ namespace Cloudbrick.Orleans.Jobs.Managers
             var id = await mgr.CreateJobAsync(spec);
             return id;
         }
-        public virtual async Task StartAsync(Guid id)
+        public virtual async Task<IJobsManager> StartAsync(Guid id)
         {
             var mgr = _orleans.GetGrain<IJobsManagerGrain>("manager");
             await mgr.StartJobAsync(id);
+            return this;
         }
-        public virtual async Task PauseAsync(Guid id)
+        public virtual async Task<IJobsManager> PauseAsync(Guid id)
         {
             await _orleans.GetGrain<IJobGrain>(id).PauseAsync();
+            return this;
         }
-        public virtual async Task ResumeAsync(Guid id)
+        public virtual async Task<IJobsManager> ResumeAsync(Guid id)
         {
             await _orleans.GetGrain<IJobGrain>(id).ResumeAsync();
+            return this;
         }
-        public virtual async Task CancelAsync(Guid id)
+        public virtual async Task<IJobsManager> CancelAsync(Guid id)
         {
             await _orleans.GetGrain<IJobGrain>(id).CancelAsync();
+            return this;
+        }
+        public virtual async Task<IJobsManager> DeleteAsync(Guid id)
+        {
+            var mgr = _orleans.GetGrain<IJobsManagerGrain>("manager");
+            await mgr.DeleteJobAsync(id);
+            return this;
         }
 
         internal static class ApiModelMapper

@@ -444,30 +444,30 @@ internal class JobGrain : Grain, IJobGrain
     }
 
     public async Task DeleteAsync()
+{
+    _schedulerCts?.Cancel();
+    _schedulerCts?.Dispose();
+    _schedulerCts = null;
+    _schedulerTimer?.Dispose();
+    _schedulerTimer = null;
+
+    foreach (var handle in _taskSubscriptions.Values)
     {
-        _schedulerCts?.Cancel();
-        _schedulerCts?.Dispose();
-        _schedulerCts = null;
-        _schedulerTimer?.Dispose();
-        _schedulerTimer = null;
-
-        foreach (var handle in _taskSubscriptions.Values)
-        {
-            try { await handle.UnsubscribeAsync(); } catch { /* ignore */ }
-        }
-        _taskSubscriptions.Clear();
-
-        await _state.ClearStateAsync();
-        _sink = null;
-        DeactivateOnIdle();
+        try { await handle.UnsubscribeAsync(); } catch { /* ignore */ }
     }
+    _taskSubscriptions.Clear();
 
-    public Task<JobState?> GetStateAsync()
-    {
-        if (!_state.RecordExists || _state.State.JobId == Guid.Empty)
-            return Task.FromResult<JobState?>(null);
-        return Task.FromResult<JobState?>(_state.State);
-    }
+    await _state.ClearStateAsync();
+    _sink = null;
+    DeactivateOnIdle();
+}
+
+public Task<JobState?> GetStateAsync()
+{
+    if (!_state.RecordExists || _state.State.JobId == Guid.Empty)
+        return Task.FromResult<JobState?>(null);
+    return Task.FromResult<JobState?>(_state.State);
+}
 
     public Task FlushAsync() => _state.WriteWithRetry(_state.State.Clone());
 
