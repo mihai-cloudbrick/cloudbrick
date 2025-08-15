@@ -188,7 +188,7 @@ namespace Cloudbrick.Orleans.Jobs.Scheduled
                 {
                     var mgr = GrainFactory.GetGrain<IJobsManagerGrain>("manager");
                     var last = await mgr.GetJobStateAsync(_state.State.LastJobId.Value);
-                    if (last.Status is not JobStatus.Succeeded
+                    if (last != null && last.Status is not JobStatus.Succeeded
                         and not JobStatus.Failed
                         and not JobStatus.Cancelled)
                     {

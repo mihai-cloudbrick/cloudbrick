@@ -31,17 +31,18 @@ public class JobDagTests : IClassFixture<ClusterFixture>
         var jobId = await mgr.CreateJobAsync(spec);
         await mgr.StartJobAsync(jobId);
 
-        JobState state;
+        JobState? state;
         int guard = 0;
         do
         {
             await Task.Delay(100);
             state = await mgr.GetJobStateAsync(jobId);
+            state.Should().NotBeNull();
             guard++;
             if (guard > 200) break;
-        } while (state.Status != Cloudbrick.Orleans.Jobs.Abstractions.Enums.JobStatus.Succeeded &&
+        } while (state!.Status != Cloudbrick.Orleans.Jobs.Abstractions.Enums.JobStatus.Succeeded &&
                  state.Status != Cloudbrick.Orleans.Jobs.Abstractions.Enums.JobStatus.Failed);
 
-        state.Status.Should().Be(Cloudbrick.Orleans.Jobs.Abstractions.Enums.JobStatus.Succeeded);
+        state!.Status.Should().Be(Cloudbrick.Orleans.Jobs.Abstractions.Enums.JobStatus.Succeeded);
     }
 }

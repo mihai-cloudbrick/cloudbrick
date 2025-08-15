@@ -12,7 +12,8 @@ public interface IJobGrain : IGrainWithGuidKey
     Task PauseAsync();
     Task ResumeAsync();
     Task CancelAsync();
-    Task<JobState> GetStateAsync();
+    Task DeleteAsync();
+    Task<JobState?> GetStateAsync();
     Task FlushAsync();
     Task EmitTelemetryAsync(ExecutionEvent evt);
     Task SetTelemetryProviderAsync(string providerKey);
