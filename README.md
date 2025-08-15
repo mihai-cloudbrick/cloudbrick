@@ -22,6 +22,11 @@ Encryption = new EncryptionOptions { Enabled = true, KeyBase64 = "<base64-32-byt
 ```
 Use `openssl rand -base64 32` to generate a key.
 
+## Tests
+- [Orleans job scheduler tests](tests/Orleans.Jobs.Tests/README.md)
+- [Orleans integration tests](tests/Orleans.Tests/README.md)
+- [Storage provider contract tests](tests/Storage.Tests/README.md)
+
 ## Notes
 - Additional providers (SQL, Azure Blob/Table, Cosmos) can be added by implementing `IDatabaseContext` and plugging into `StorageProviderFactory`.
 - The Kusto loader currently scans via `ListAsync`. Plug your Kusto-Loco engine where indicated to evaluate KQL.
